@@ -1,19 +1,22 @@
-package cb.rest;
+package aporoo.rest;
 
-import cb.rest.stock.IStockRestApi;
-import cb.rest.stock.impl.StockRestApi;
-import cb.util.LimitQueue;
+import aporoo.rest.stock.IStockRestApi;
+import aporoo.rest.stock.impl.StockRestApi;
+import aporoo.util.LimitQueue;
 import com.alibaba.fastjson.JSONArray;
 import com.alibaba.fastjson.JSONObject;
 import common.CBconstants;
+import common.CPconstants;
 import org.apache.http.HttpException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.util.StringUtils;
 
 import java.io.IOException;
 import java.math.BigDecimal;
 import java.text.SimpleDateFormat;
 import java.util.Date;
+import java.util.HashMap;
 import java.util.concurrent.ScheduledThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
 
@@ -22,21 +25,21 @@ import java.util.concurrent.TimeUnit;
  */
 public class StockClient {
     private static final Logger logger = LoggerFactory.getLogger(StockClient.class);
-    static IStockRestApi restApi = new StockRestApi(CBconstants.URL_PREX, CBconstants.TEST_API_KEY, CBconstants.TEST_SECRET_KEY);
+    static IStockRestApi restApi = new StockRestApi(CPconstants.URL_PREX, CPconstants.MINE_API_KEY, CPconstants.MINE_SECRET_KEY);
 
     static int SLEEP_TIME = 1200;
     static int CYCLE_TIME = 7000;
-    static BigDecimal HUADIAN = new BigDecimal("0.01");
-    static BigDecimal CB_HUADIAN = new BigDecimal("0.004");
+    static BigDecimal HUADIAN = new BigDecimal("0.005");
+    static BigDecimal CP_HUADIAN = new BigDecimal("0.0004");
 
     //监控3分钟内容
     static LimitQueue<BigDecimal> pricelist = new LimitQueue<BigDecimal>(3000 * 6000 / CYCLE_TIME);
 
-    // CB最低价格设置
-    static BigDecimal CB_LOW_SELLPRICE = new BigDecimal("0.29");
+    // CP最低价格设置
+    static BigDecimal CB_LOW_SELLPRICE = new BigDecimal("0.075");
 
     // CP挖矿安全价格
-    static BigDecimal MAX_MINE_PRICE = new BigDecimal("0.32");
+    static BigDecimal MAX_MINE_PRICE = new BigDecimal("0.07");
 
     //买卖开始时间
     static int BuyStartHour = 100;
@@ -51,10 +54,10 @@ public class StockClient {
     static BigDecimal OKpriceStopSellLimit = new BigDecimal("4");
 
     //USDT 保留的底仓
-    static BigDecimal BuyKeepLimit = new BigDecimal("1");
+    static BigDecimal BuyKeepLimit = new BigDecimal("10");
 
     //BTC 保留的底仓
-    static BigDecimal SellKeepLimit = new BigDecimal("0.00001");
+    static BigDecimal SellKeepLimit = new BigDecimal("0.001");
 
     //是否开启OK监控策略
     static boolean isMonitorOK = false;
@@ -63,7 +66,7 @@ public class StockClient {
     static boolean isSellCB = false;
 
     //是否自买自卖
-    static boolean isAutoTrade = false;
+    static boolean isAutoTrade = true;
 
 
     public static void main(String[] args) throws HttpException, IOException {
@@ -75,7 +78,8 @@ public class StockClient {
          * TimeUnit.MILLISECONDS：时间单位
          */
         //   scheduledExecutor.scheduleAtFixedRate(new timerTask_auto(), 0, CYCLE_TIME, TimeUnit.MILLISECONDS);
-        scheduledExecutor.scheduleAtFixedRate(new timerTask_quick(), 0, 8000, TimeUnit.MILLISECONDS);
+        scheduledExecutor.scheduleAtFixedRate(new timerTask_quick(), 0, 5000, TimeUnit.MILLISECONDS);
+//        scheduledExecutor.scheduleAtFixedRate(new timerTask_quick(), 0, 10000, TimeUnit.MILLISECONDS);
 //        scheduledExecutor.scheduleAtFixedRate(new timerTask_sellft(), 0, CYCLE_TIME, TimeUnit.MILLISECONDS);
     }
 
@@ -98,11 +102,13 @@ public class StockClient {
      * @return 未成交、部分成交的挂单
      * 访问频率 1次/1秒
      */
-    public static JSONArray getOrderList(String symbol) throws Exception {
-        String orderList = restApi.getOrderList(symbol, "5", "1,2");
+    public static JSONArray getOrderList(String pair, String symbol) throws HttpException, IOException {
+        // 查订单列表，若有未提交，则取消
+        // 最后一个参数不传
+        // // "BTC_USDT", 0,     1,   10,    "BTC",      "USDT",          1);
+        String orderList = restApi.getOrderList(pair, 0, 1, 10, symbol, "USDT", 1);
         JSONObject jsonOrder = JSONObject.parseObject(orderList);
-        JSONArray orderArray = jsonOrder.getJSONObject("data").getJSONArray("orders");
-        Thread.sleep(1000l);
+        JSONArray orderArray = ((JSONObject) jsonOrder.getJSONArray("result").get(0)).getJSONObject("result").getJSONArray("items");
         return orderArray;
     }
 
@@ -114,36 +120,51 @@ public class StockClient {
      * @return 币种对应可用数量
      * 访问频率 1次/1秒
      */
-    public static BigDecimal getBalance(String symbol) throws Exception {
-        String balance = restApi.queryBalance(symbol);
+    public static BigDecimal getBalance(String symbol) throws HttpException, IOException {
+        BigDecimal amount = new BigDecimal(0);
+        String balance = restApi.queryBalance();
         JSONObject jsonBalance = JSONObject.parseObject(balance);
-        JSONObject balanceObj = jsonBalance.getJSONObject("data").getJSONObject("info").getJSONObject("free");
-        logger.info("balanceArray:{}", balanceObj);
-        BigDecimal balanceAmt = balanceObj.getBigDecimal(symbol);
-        Thread.sleep(1000l);
-        return balanceAmt;
+        JSONArray balanceArray = ((JSONObject) jsonBalance.getJSONArray("result").get(0)).getJSONObject("result").getJSONArray("assets_list");
+        //遍历JSONArray
+        for (Object object : balanceArray) {
+            JSONObject jsonObjectone = (JSONObject) object;
+            String currency = jsonObjectone.getString("coin_symbol");
+            if (symbol.equals(currency)) {
+                amount = jsonObjectone.getBigDecimal("balance");
+                return amount;
+            }
+        }
+        return amount;
     }
+
 
     /**
      * 获取委托价格
      *
-     * @param tradeSide 买入 bids 卖出 asks
      * @param num       委托档次
      * @return 盘口价格
      * 访问频率 1次/1秒
      */
-    public static BigDecimal getEntrustPrice(String pair, String tradeSide, int num) throws Exception {
+    public static HashMap<String,BigDecimal> getEntrustPrice(String pair, int num) throws Exception {
+        HashMap<String,BigDecimal> hm = new HashMap();
+
+        BigDecimal asksPrice;
+        BigDecimal bidsPrice;
         String depthInfo = restApi.getDepthInfo(pair, "5");
         JSONObject jsonDepth = JSONObject.parseObject(depthInfo);
-        JSONObject jsonData = jsonDepth.getJSONObject("data");
+        JSONObject jsonData = jsonDepth.getJSONObject("result");
+        JSONArray jsonAsks = jsonData.getJSONArray("asks");
+        JSONArray jsonBids = jsonData.getJSONArray("bids");
         if(jsonData == null){
             logger.error("获取委托价格异常:{}",pair);
-            return new BigDecimal(0);
+            return null;
         }
-        JSONArray jsonPrice = jsonData.getJSONArray(tradeSide);
-        BigDecimal entrustPrice = (BigDecimal) ((JSONArray) jsonPrice.get(num)).get(0);
-        Thread.sleep(3000l);
-        return entrustPrice;
+        asksPrice = ((JSONObject) jsonAsks.get(num)).getBigDecimal("price").setScale(4, BigDecimal.ROUND_FLOOR);
+        bidsPrice = ((JSONObject) jsonBids.get(num)).getBigDecimal("price").setScale(4, BigDecimal.ROUND_FLOOR);
+
+        hm.put("asks",asksPrice);
+        hm.put("bids",bidsPrice);
+        return hm;
     }
 
     /**
@@ -154,12 +175,19 @@ public class StockClient {
      */
     public static void cancelOrder(JSONArray orderArray) throws Exception {
         for (Object object : orderArray) {
-            JSONObject jsonObject = (JSONObject) object;
-            String orderID = jsonObject.getString("order_id");
-            restApi.cancelOrder(orderID);
-            Thread.sleep(1000);
+            JSONObject jsonObjectone = (JSONObject) object;
+            String orderID = jsonObjectone.getString("id");
+            String status = jsonObjectone.getString("status");
+            // 状态，1-待成交，2-部分成交，3-完全成交，4-部分撤销，5-完全撤销，6-待撤销
+            if (!StringUtils.isEmpty(status)) {
+                if ("1".equals(status) || "2".equals(status)) {
+                    restApi.cancelOrder(orderID);
+                    Thread.sleep(1000l);
+                }
+            }
         }
     }
+
 
     /*
      * 自动买卖时间
@@ -180,13 +208,14 @@ public class StockClient {
     }
 
 
-    public static void buy(BigDecimal midPrice,BigDecimal okprice) throws Exception {
+    public static void buy(String pair,BigDecimal midPrice,BigDecimal okprice) throws Exception {
         BigDecimal buyPrice;
         if (checkTime() == false) {
             logger.info("时间未到，开始时间为：" + BuyStartHour + "结束时间为" + BuyEndHour);
             return;
         }
         BigDecimal usdtAmount = getBalance("USDT");
+
         if (isAutoTrade) {
             usdtAmount = usdtAmount.divide(new BigDecimal(2), 4, BigDecimal.ROUND_FLOOR);
         }
@@ -194,9 +223,8 @@ public class StockClient {
         logger.info("buy check in usdtAmount:{}", usdtAmount);
         if (usdtAmount.compareTo(BuyKeepLimit) > 0) {
             // 查询卖二
-//            buyPrice = getEntrustPrice(CBconstants.BTC_USDT_PAIR,"asks", 1);
             buyPrice = midPrice.setScale(2, BigDecimal.ROUND_FLOOR).add(HUADIAN);
-            logger.info("当前价CB:" + buyPrice.toString() + ",当前价Ok:" + okprice.toString());
+            logger.info("当前价CP:" + buyPrice.toString() + ",当前价Ok:" + okprice.toString());
             if (buyPrice.subtract(okprice).compareTo(OKpriceStopBuyLimit) > 0) {
                 //FT价格高于OK，2USDT，放弃购买
                 logger.info("CB价格高于OK价格超过:" + OKpriceStopBuyLimit);
@@ -204,49 +232,60 @@ public class StockClient {
             }
             String amount = usdtAmount.divide(buyPrice, 4, BigDecimal.ROUND_FLOOR).toString();
             logger.info("！！！开始购买buyPrice:" + buyPrice.toString() + ",amount:" + amount.toString());
-            restApi.trade(CBconstants.ETH_USDT_PAIR, "buy", buyPrice.toString(), amount);
+            restApi.trade(pair, 0, 2, 1, buyPrice, new BigDecimal(amount));
         }
-        Thread.sleep(3000l);
     }
 
     // 1.底仓判断  2.ok\cb上BTC差价比较  3.卖BTC
     // 访问频率 3秒/次
-    public static void sell(BigDecimal midPrice,BigDecimal okprice) throws Exception {
+    public static void sell(String pair,BigDecimal midPrice,BigDecimal okprice) throws Exception {
         BigDecimal sellPrice;
-        BigDecimal btcAmount = getBalance("BTC");
-        logger.info("sell check in btcAmount:{}", btcAmount);
+        BigDecimal ethAmount = getBalance("ETH");
+        logger.info("sell check in ethAmount:{}", ethAmount);
         // btc底仓判断
-        if (btcAmount.compareTo(SellKeepLimit) > 0) {
-            sellPrice = midPrice.setScale(4, BigDecimal.ROUND_FLOOR).subtract(HUADIAN);
+        if (ethAmount.compareTo(SellKeepLimit) > 0) {
+            // 查询买二
+            sellPrice = midPrice.setScale(2, BigDecimal.ROUND_FLOOR).subtract(HUADIAN);
             logger.info("当前买2价:" + sellPrice.toString() + ",当前价Ok:" + okprice.toString());
             // OK网价格与CP网价格比较
             if (okprice.subtract(sellPrice).compareTo(OKpriceStopSellLimit) > 0) {
                 logger.info("CB价格低于OK价格超过限制" + OKpriceStopSellLimit);
                 return;
             }
-            btcAmount = btcAmount.setScale(7, BigDecimal.ROUND_FLOOR);
-            logger.info("sellPrice:" + sellPrice.toString() + ", amount:" + btcAmount.toString());
-            restApi.trade(CBconstants.ETH_USDT_PAIR, "sell", sellPrice.toString(), btcAmount.toString());
+            ethAmount = ethAmount.setScale(3, BigDecimal.ROUND_FLOOR);
+            logger.info("sellPrice:" + sellPrice.toString() + ", amount:" + ethAmount.toString());
+            // order_side,     //交易方向，1-买，2-卖
+            restApi.trade(pair, 0, 2, 2, sellPrice, ethAmount);
+
         }
-        Thread.sleep(3000l);
     }
 
     public static void sell_cb() throws Exception {
-        BigDecimal cbAmount = getBalance("CB");
-        BigDecimal sellPrice = getEntrustPrice(CBconstants.CB_USDT_PAIR,"bids", 1);
-        sellPrice = sellPrice.subtract(CB_HUADIAN);
+        BigDecimal cbAmount = getBalance("CP");
+        BigDecimal sellPrice = getEntrustPrice(CBconstants.CB_USDT_PAIR, 1).get("bids");
+        sellPrice = sellPrice.subtract(CP_HUADIAN);
 
-        if (sellPrice.compareTo(CB_LOW_SELLPRICE) < 0) {
-            logger.info("价格太低不卖！当前价格:" + sellPrice + "，当前价格底线：" + CB_LOW_SELLPRICE);
-            return;
-        }
+
         if (cbAmount.compareTo(new BigDecimal(1)) > 0) {
+            if (sellPrice.compareTo(CB_LOW_SELLPRICE) < 0) {
+                logger.info("价格太低不卖！当前价格:" + sellPrice + "，当前价格底线：" + CB_LOW_SELLPRICE);
+                return;
+            }
+
+            /*
+            // 获取未成交订单列表
+            JSONArray orderArray = getOrderList(CPconstants.CP_USDT_PAIR,"CP");
+            // 取消挂单
+            if (orderArray.size() > 0) {
+                cancelOrder(orderArray);
+            }
+            */
+
             // 查询卖二
-            sellPrice = sellPrice.setScale(3, BigDecimal.ROUND_FLOOR);
+            sellPrice = sellPrice.setScale(4, BigDecimal.ROUND_FLOOR);
             cbAmount = cbAmount.setScale(2, BigDecimal.ROUND_FLOOR);
             logger.info("！！！卖出CP价格：" + sellPrice + "数量:" + cbAmount);
-            restApi.trade(CBconstants.CB_USDT_PAIR, "sell", sellPrice.toString(), cbAmount.toString());
-            //  break;
+            restApi.trade(CPconstants.CP_USDT_PAIR, 0, 2, 2, sellPrice, cbAmount);
         } else {
             logger.info("数量不足，不卖CP");
         }
@@ -259,7 +298,7 @@ public class StockClient {
             try {
                 logger.info("---------START快速买卖版本-------->");
                 // 获取未成交订单列表
-                JSONArray orderArray = getOrderList(CBconstants.ETH_USDT_PAIR);
+                JSONArray orderArray = getOrderList(CPconstants.ETH_USDT_PAIR,"ETH");
                 // 取消挂单
                 if (orderArray.size() > 0) {
                     cancelOrder(orderArray);
@@ -272,29 +311,26 @@ public class StockClient {
                     sell_cb();
                 }
 
-                // bid--->sell   asks--->buy
-                // 自成交，取买一卖一
-                BigDecimal asksPrice = getEntrustPrice(CBconstants.ETH_USDT_PAIR,"asks",0);
-                BigDecimal bidsPrice = getEntrustPrice(CBconstants.ETH_USDT_PAIR,"bids",0);
+                BigDecimal asksPrice = getEntrustPrice(CPconstants.ETH_USDT_PAIR, 0).get("asks");
+                BigDecimal bidsPrice = getEntrustPrice(CPconstants.ETH_USDT_PAIR, 0).get("bids");
+
 
                 //卖出BTC，先卖后买
-                sell(bidsPrice,okprice);
+                sell(CPconstants.ETH_USDT_PAIR,bidsPrice,okprice);
 
                 if (isMonitorOK) {
                     // ok网价格监控开启，进行价格判断
                     if (pricelist.jude(okprice)) {
-                        buy(asksPrice,okprice);
+                        buy(CPconstants.ETH_USDT_PAIR,asksPrice,okprice);
                     }
                 } else {
                     // 直接购买
-                    BigDecimal cbPrice = getEntrustPrice(CBconstants.ETH_USDT_PAIR,"asks",0);
-                    /*
+                    BigDecimal cbPrice = getEntrustPrice(CBconstants.CB_USDT_PAIR, 0).get("bids");
                     if(cbPrice.compareTo(MAX_MINE_PRICE) > 0){
                         logger.info("当前CB价格:{} 高于安全挖矿价格:{}" , cbPrice , MAX_MINE_PRICE);
                         return;
                     }
-                    */
-                    buy(asksPrice,okprice);
+                    buy(CPconstants.ETH_USDT_PAIR,asksPrice,okprice);
                 }
                 logger.info("---------END----------->");
             } catch (Exception e) {
@@ -302,11 +338,4 @@ public class StockClient {
             }
         }
     }
-
 }
-
-
-
-
-
-

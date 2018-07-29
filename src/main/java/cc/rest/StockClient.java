@@ -262,7 +262,7 @@ public class StockClient {
 
     public static void sell_cb() throws Exception {
         BigDecimal cbAmount = getBalance("CP");
-        BigDecimal sellPrice = getEntrustPrice(CBconstants.CP_USDT_PAIR, 1).get("bids");
+        BigDecimal sellPrice = getEntrustPrice(CBconstants.CB_USDT_PAIR, 1).get("bids");
         sellPrice = sellPrice.subtract(CP_HUADIAN);
 
 
@@ -325,7 +325,7 @@ public class StockClient {
                     }
                 } else {
                     // 直接购买
-                    BigDecimal cbPrice = getEntrustPrice(CBconstants.CP_USDT_PAIR, 0).get("bids");
+                    BigDecimal cbPrice = getEntrustPrice(CBconstants.CB_USDT_PAIR, 0).get("bids");
                     if(cbPrice.compareTo(MAX_MINE_PRICE) > 0){
                         logger.info("当前CB价格:{} 高于安全挖矿价格:{}" , cbPrice , MAX_MINE_PRICE);
                         return;
