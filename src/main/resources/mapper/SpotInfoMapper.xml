@@ -1,0 +1,93 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="base.dao.SpotInfoMapper">
+  <resultMap id="SpotInfoMapper" type="base.model.SpotInfo">
+    <result column="SEQ_NO" jdbcType="VARCHAR" property="seqNo" />
+    <result column="SERVER_TIME" jdbcType="DATE" property="serverTime" />
+    <result column="SYMBOL" jdbcType="VARCHAR" property="symbol" />
+    <result column="BUY" jdbcType="DECIMAL" property="buy" />
+    <result column="SELL" jdbcType="DECIMAL" property="sell" />
+    <result column="LAST" jdbcType="DECIMAL" property="last" />
+    <result column="HIGH" jdbcType="DECIMAL" property="high" />
+    <result column="LOW" jdbcType="DECIMAL" property="low" />
+    <result column="CREATE_DATE" jdbcType="DATE" property="createDate" />
+    <result column="UPDATE_DATE" jdbcType="DATE" property="updateDate" />
+  </resultMap>
+  <insert id="insert" parameterType="base.model.SpotInfo">
+    insert into SPOT_INFO (SEQ_NO, SERVER_TIME, SYMBOL, 
+      BUY, SELL, LAST, HIGH, 
+      LOW, CREATE_DATE, UPDATE_DATE
+      )
+    values (#{seqNo,jdbcType=VARCHAR}, #{serverTime,jdbcType=DATE}, #{symbol,jdbcType=VARCHAR}, 
+      #{buy,jdbcType=DECIMAL}, #{sell,jdbcType=DECIMAL}, #{last,jdbcType=DECIMAL}, #{high,jdbcType=DECIMAL}, 
+      #{low,jdbcType=DECIMAL}, #{createDate,jdbcType=DATE}, #{updateDate,jdbcType=DATE}
+      )
+  </insert>
+  <insert id="insertSelective" parameterType="base.model.SpotInfo">
+    insert into SPOT_INFO
+    <trim prefix="(" suffix=")" suffixOverrides=",">
+      <if test="seqNo != null">
+        SEQ_NO,
+      </if>
+      <if test="serverTime != null">
+        SERVER_TIME,
+      </if>
+      <if test="symbol != null">
+        SYMBOL,
+      </if>
+      <if test="buy != null">
+        BUY,
+      </if>
+      <if test="sell != null">
+        SELL,
+      </if>
+      <if test="last != null">
+        LAST,
+      </if>
+      <if test="high != null">
+        HIGH,
+      </if>
+      <if test="low != null">
+        LOW,
+      </if>
+      <if test="createDate != null">
+        CREATE_DATE,
+      </if>
+      <if test="updateDate != null">
+        UPDATE_DATE,
+      </if>
+    </trim>
+    <trim prefix="values (" suffix=")" suffixOverrides=",">
+      <if test="seqNo != null">
+        #{seqNo,jdbcType=VARCHAR},
+      </if>
+      <if test="serverTime != null">
+        #{serverTime,jdbcType=DATE},
+      </if>
+      <if test="symbol != null">
+        #{symbol,jdbcType=VARCHAR},
+      </if>
+      <if test="buy != null">
+        #{buy,jdbcType=DECIMAL},
+      </if>
+      <if test="sell != null">
+        #{sell,jdbcType=DECIMAL},
+      </if>
+      <if test="last != null">
+        #{last,jdbcType=DECIMAL},
+      </if>
+      <if test="high != null">
+        #{high,jdbcType=DECIMAL},
+      </if>
+      <if test="low != null">
+        #{low,jdbcType=DECIMAL},
+      </if>
+      <if test="createDate != null">
+        #{createDate,jdbcType=DATE},
+      </if>
+      <if test="updateDate != null">
+        #{updateDate,jdbcType=DATE},
+      </if>
+    </trim>
+  </insert>
+</mapper>

@@ -1,0 +1,84 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<beans xmlns="http://www.springframework.org/schema/beans"
+       xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:aop="http://www.springframework.org/schema/aop"
+       xmlns:cache="http://www.springframework.org/schema/cache"
+       xmlns:context="http://www.springframework.org/schema/context"
+       xmlns:jdbc="http://www.springframework.org/schema/jdbc" xmlns:jee="http://www.springframework.org/schema/jee"
+       xmlns:jms="http://www.springframework.org/schema/jms" xmlns:lang="http://www.springframework.org/schema/lang"
+       xmlns:mvc="http://www.springframework.org/schema/mvc" xmlns:oxm="http://www.springframework.org/schema/oxm"
+       xmlns:p="http://www.springframework.org/schema/p" xmlns:task="http://www.springframework.org/schema/task"
+       xmlns:tx="http://www.springframework.org/schema/tx" xmlns:util="http://www.springframework.org/schema/util"
+       xsi:schemaLocation="http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans.xsd
+       http://www.springframework.org/schema/aop http://www.springframework.org/schema/aop/spring-aop-4.3.xsd
+        http://www.springframework.org/schema/cache http://www.springframework.org/schema/cache/spring-cache-4.3.xsd
+        http://www.springframework.org/schema/context http://www.springframework.org/schema/context/spring-context-4.3.xsd
+        http://www.springframework.org/schema/jdbc http://www.springframework.org/schema/jdbc/spring-jdbc-4.3.xsd
+        http://www.springframework.org/schema/jee http://www.springframework.org/schema/jee/spring-jee-4.3.xsd
+        http://www.springframework.org/schema/jms http://www.springframework.org/schema/jms/spring-jms-4.3.xsd
+        http://www.springframework.org/schema/lang http://www.springframework.org/schema/lang/spring-lang-4.3.xsd
+        http://www.springframework.org/schema/mvc http://www.springframework.org/schema/mvc/spring-mvc-4.3.xsd
+        http://www.springframework.org/schema/oxm http://www.springframework.org/schema/oxm/spring-oxm-4.3.xsd
+        http://www.springframework.org/schema/task http://www.springframework.org/schema/task/spring-task-4.3.xsd
+        http://www.springframework.org/schema/tx http://www.springframework.org/schema/tx/spring-tx-4.3.xsd
+        http://www.springframework.org/schema/util http://www.springframework.org/schema/util/spring-util-4.3.xsd">
+
+    <context:component-scan base-package="base.dao"/>
+    <context:component-scan base-package="okcoin.rest"/>
+    <bean id="dataSource" class="com.mchange.v2.c3p0.ComboPooledDataSource" destroy-method="close">
+        <property name="driverClass">
+            <value>${jdbc.driverClassName}</value>
+        </property>
+        <property name="jdbcUrl">
+            <value>${jdbc.databaseurl}</value>
+        </property>
+        <property name="user">
+            <value>${jdbc.username}</value>
+        </property>
+        <property name="password">
+            <value>${jdbc.pwd}</value>
+        </property>
+        <!-- 最大连接数 -->
+        <property name="maxPoolSize" value="${maxPoolSize}" />
+        <!-- 最小连接数 -->
+        <property name="minPoolSize" value="${minPoolSize}" />
+        <!-- 初始化连接数 -->
+        <property name="initialPoolSize" value="${initialPoolSize}" />
+        <!-- 最大空闲时间 ,120秒内未使用则连接被丢弃。若为0则永不丢弃 -->
+        <property name="maxIdleTime" value="${maxIdleTime}" />
+        <!-- 当连接池里面的连接用完的时候，C3P0一下获取的新的连接数 -->
+        <property name="acquireIncrement" value="${acquireIncrement}" />
+        <!-- 最大的PreparedStatement的数量 -->
+        <property name="maxStatements" value="${maxStatements}" />
+        <!-- 每隔120秒检查连接池里的空闲连接 -->
+        <property name="idleConnectionTestPeriod" value="${idleConnectionTestPeriod}" />
+        <!-- 如果设为true那么在取得连接的同时将校验连接的有效性 。Default: false -->
+        <property name="testConnectionOnCheckin" value="${testConnectionOnCheckin}" />
+        <!--定义在从数据库获取新连接失败后重复尝试的次数。Default: 30 -->
+        <property name="acquireRetryAttempts" value="${acquireRetryAttempts}" />
+        <!--连接关闭时默认将所有未提交的操作回滚。Default: false -->
+        <property name="autoCommitOnClose" value="${autoCommitOnClose}" />
+        <!--获取连接失败将会引起所有等待连接池来获取连接的线程抛出异常。但是数据源仍有效 保留，并在下次调用getConnection()的时候继续尝试获取连接。
+            如果设为true，那么在尝试获取连接失败后该数据源将申明已断开并永久关闭。Default: false -->
+        <property name="breakAfterAcquireFailure"
+                  value="${breakAfterAcquireFailure}" />
+        <!--c3p0是异步操作的，缓慢的JDBC操作通过帮助进程完成。扩展这些操作可以有效的提升性能通过多线程实现多个操作同时被执行。Default: 3 -->
+        <property name="numHelperThreads" value="${numHelperThreads}" />
+        <!--当连接池用完时客户端调用getConnection()后等待获取新连接的时间，超时后将抛出SQLException,如设为0则无限期等待。Default:  0 -->
+        <property name="checkoutTimeout" value="${checkoutTimeout}" />
+    </bean>
+
+    <bean id="sessionFactory" class="org.mybatis.spring.SqlSessionFactoryBean">
+		<property name="dataSource" ref="dataSource" />
+        <property name="configLocation" value="classpath:mapper/mybatis.cfg.xml" />
+        <property name="mapperLocations" value="classpath:mapper/*Mapper.xml" />
+	</bean>
+
+    <bean id="sqlSession" class="org.mybatis.spring.SqlSessionTemplate">
+        <constructor-arg index="0" ref="sessionFactory" />
+    </bean>
+
+    <bean class="org.mybatis.spring.mapper.MapperScannerConfigurer">
+		<!--<property name="sqlSessionFactoryBeanName" value="sessionFactory"/> -->
+		<property name="basePackage" value="base.dao" />
+	</bean>
+</beans>

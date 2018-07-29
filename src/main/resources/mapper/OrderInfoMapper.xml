@@ -1,0 +1,165 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="base.dao.OrderInfoMapper">
+  <resultMap id="BaseResultMap" type="base.model.OrderInfo">
+    <id column="SEQ_NO" jdbcType="VARCHAR" property="seqNo" />
+    <result column="ORDER_ID" jdbcType="VARCHAR" property="orderId" />
+    <result column="BUSS_TYPE" jdbcType="VARCHAR" property="bussType" />
+    <result column="SYMBOL" jdbcType="VARCHAR" property="symbol" />
+    <result column="PRICE" jdbcType="DECIMAL" property="price" />
+    <result column="AMOUNT" jdbcType="DECIMAL" property="amount" />
+    <result column="TRADE_TYPE" jdbcType="DECIMAL" property="tradeType" />
+    <result column="CONTRACT_TYPE" jdbcType="VARCHAR" property="contractType" />
+    <result column="CREATE_DATE" jdbcType="DATE" property="createDate" />
+    <result column="UPDATE_DATE" jdbcType="DATE" property="updateDate" />
+  </resultMap>
+  <sql id="Base_Column_List">
+    SEQ_NO, ORDER_ID, BUSS_TYPE, SYMBOL, PRICE, AMOUNT, TRADE_TYPE, CONTRACT_TYPE, 
+    CREATE_DATE, UPDATE_DATE
+  </sql>
+  <select id="selectByPrimaryKey" parameterType="java.lang.String" resultMap="BaseResultMap">
+    select 
+    <include refid="Base_Column_List" />
+    from ORDER_INFO
+    where SEQ_NO = #{seqNo,jdbcType=VARCHAR}
+  </select>
+  <delete id="deleteByPrimaryKey" parameterType="java.lang.String">
+    delete from ORDER_INFO
+    where SEQ_NO = #{seqNo,jdbcType=VARCHAR}
+  </delete>
+  <insert id="insert" parameterType="base.model.OrderInfo">
+    insert into ORDER_INFO (SEQ_NO, ORDER_ID, BUSS_TYPE, 
+      SYMBOL, PRICE, AMOUNT, 
+      TRADE_TYPE, CONTRACT_TYPE, CREATE_DATE, 
+      UPDATE_DATE)
+    values (#{seqNo,jdbcType=VARCHAR}, #{orderId,jdbcType=VARCHAR}, #{bussType,jdbcType=VARCHAR},
+      #{symbol,jdbcType=VARCHAR}, #{price,jdbcType=DECIMAL}, #{amount,jdbcType=DECIMAL}, 
+      #{tradeType,jdbcType=DECIMAL}, #{contractType,jdbcType=VARCHAR}, #{createDate,jdbcType=DATE}, 
+      #{updateDate,jdbcType=DATE})
+  </insert>
+
+  <insert id="insertOrder" parameterType="base.model.OrderInfo">
+    insert into ORDER_INFO (SEQ_NO, ORDER_ID, BUSS_TYPE,
+      SYMBOL, PRICE, AMOUNT,
+      TRADE_TYPE, CONTRACT_TYPE, CREATE_DATE,
+      UPDATE_DATE)
+    values ('SF'||LPAD(SEQ_ORDER_INFO.NEXTVAL, 18, '0'), #{orderId,jdbcType=VARCHAR}, #{bussType,jdbcType=VARCHAR},
+      #{symbol,jdbcType=VARCHAR}, #{price,jdbcType=DECIMAL}, #{amount,jdbcType=DECIMAL},
+      #{tradeType,jdbcType=DECIMAL}, #{contractType,jdbcType=VARCHAR}, #{createDate,jdbcType=DATE},
+      #{updateDate,jdbcType=DATE})
+  </insert>
+
+  <insert id="insertSelective" parameterType="base.model.OrderInfo">
+    insert into ORDER_INFO
+    <trim prefix="(" suffix=")" suffixOverrides=",">
+      <if test="seqNo != null">
+        SEQ_NO,
+      </if>
+      <if test="orderId != null">
+        ORDER_ID,
+      </if>
+      <if test="bussType != null">
+        BUSS_TYPE,
+      </if>
+      <if test="symbol != null">
+        SYMBOL,
+      </if>
+      <if test="price != null">
+        PRICE,
+      </if>
+      <if test="amount != null">
+        AMOUNT,
+      </if>
+      <if test="tradeType != null">
+        TRADE_TYPE,
+      </if>
+      <if test="contractType != null">
+        CONTRACT_TYPE,
+      </if>
+      <if test="createDate != null">
+        CREATE_DATE,
+      </if>
+      <if test="updateDate != null">
+        UPDATE_DATE,
+      </if>
+    </trim>
+    <trim prefix="values (" suffix=")" suffixOverrides=",">
+      <if test="seqNo != null">
+        #{seqNo,jdbcType=VARCHAR},
+      </if>
+      <if test="orderId != null">
+        #{orderId,jdbcType=VARCHAR},
+      </if>
+      <if test="bussType != null">
+        #{bussType,jdbcType=VARCHAR},
+      </if>
+      <if test="symbol != null">
+        #{symbol,jdbcType=VARCHAR},
+      </if>
+      <if test="price != null">
+        #{price,jdbcType=DECIMAL},
+      </if>
+      <if test="amount != null">
+        #{amount,jdbcType=DECIMAL},
+      </if>
+      <if test="tradeType != null">
+        #{tradeType,jdbcType=DECIMAL},
+      </if>
+      <if test="contractType != null">
+        #{contractType,jdbcType=VARCHAR},
+      </if>
+      <if test="createDate != null">
+        #{createDate,jdbcType=DATE},
+      </if>
+      <if test="updateDate != null">
+        #{updateDate,jdbcType=DATE},
+      </if>
+    </trim>
+  </insert>
+  <update id="updateByPrimaryKeySelective" parameterType="base.model.OrderInfo">
+    update ORDER_INFO
+    <set>
+      <if test="orderId != null">
+        ORDER_ID = #{orderId,jdbcType=VARCHAR},
+      </if>
+      <if test="bussType != null">
+        BUSS_TYPE = #{bussType,jdbcType=VARCHAR},
+      </if>
+      <if test="symbol != null">
+        SYMBOL = #{symbol,jdbcType=VARCHAR},
+      </if>
+      <if test="price != null">
+        PRICE = #{price,jdbcType=DECIMAL},
+      </if>
+      <if test="amount != null">
+        AMOUNT = #{amount,jdbcType=DECIMAL},
+      </if>
+      <if test="tradeType != null">
+        TRADE_TYPE = #{tradeType,jdbcType=DECIMAL},
+      </if>
+      <if test="contractType != null">
+        CONTRACT_TYPE = #{contractType,jdbcType=VARCHAR},
+      </if>
+      <if test="createDate != null">
+        CREATE_DATE = #{createDate,jdbcType=DATE},
+      </if>
+      <if test="updateDate != null">
+        UPDATE_DATE = #{updateDate,jdbcType=DATE},
+      </if>
+    </set>
+    where SEQ_NO = #{seqNo,jdbcType=VARCHAR}
+  </update>
+  <update id="updateByPrimaryKey" parameterType="base.model.OrderInfo">
+    update ORDER_INFO
+    set ORDER_ID = #{orderId,jdbcType=VARCHAR},
+      BUSS_TYPE = #{bussType,jdbcType=VARCHAR},
+      SYMBOL = #{symbol,jdbcType=VARCHAR},
+      PRICE = #{price,jdbcType=DECIMAL},
+      AMOUNT = #{amount,jdbcType=DECIMAL},
+      TRADE_TYPE = #{tradeType,jdbcType=DECIMAL},
+      CONTRACT_TYPE = #{contractType,jdbcType=VARCHAR},
+      CREATE_DATE = #{createDate,jdbcType=DATE},
+      UPDATE_DATE = #{updateDate,jdbcType=DATE}
+    where SEQ_NO = #{seqNo,jdbcType=VARCHAR}
+  </update>
+</mapper>

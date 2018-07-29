@@ -1,0 +1,68 @@
+table {
+  font-size: 12px;
+}
+
+tr.mouseout {
+  background-color: #FFFFFF;
+}
+
+tr.mouseover {
+  background-color: #EFEFFF;
+}
+
+td.head {
+  background-color: #EFEFEF;
+  color: #000000;
+  padding-left: 8px;
+  text-align: left;
+}
+
+td.label {
+  padding-right: 8px;
+  text-align: right;
+}
+
+td.content {
+  padding-left: 8px;
+  text-align: left;
+}
+
+td{height:35px;}
+
+td.tabFocus {
+	border-top-width: 1px;
+	border-right-width: 1px;
+	border-bottom-width: 0px;
+	border-left-width: 1px;
+	border-top-style: solid;
+	border-right-style: solid;
+	border-bottom-style: solid;
+	border-left-style: solid;
+	border-top-color: #888888;
+	border-right-color: #888888;
+	border-bottom-color: #FFFFFF;
+	border-left-color: #888888;
+	text-align: center;
+	margin: 1px;
+	padding: 1px;
+	font-size: 12px;
+}
+
+td.tabBlur {
+	border-top-width: 0px;
+	border-right-width: 0px;
+	border-bottom-width: 1px;
+	border-left-width: 0px;
+	border-top-style: solid;
+	border-right-style: solid;
+	border-bottom-style: solid;
+	border-left-style: solid;
+	border-top-color: #FFFFFF;
+	border-right-color: #FFFFFF;
+	border-bottom-color: #888888;
+	border-left-color: #FFFFFF;
+	text-align: center;
+	margin: 1px;
+	padding: 1px;
+	font-size: 12px;
+}

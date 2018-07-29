@@ -1,0 +1,52 @@
+body {
+	font-size: 12px;
+}
+
+a:link {
+	color: #000000;
+	text-decoration: none;
+}
+
+a:visited {
+	color: #000000;
+	text-decoration: none;
+}
+
+a:hover {
+	color: #ff0000;
+	text-decoration: underline
+}
+
+a:active {
+	color: #000000;
+	text-decoration: none
+}
+
+a.top:link {
+	color: #000000;
+	text-decoration: none;
+}
+
+a.top:visited {
+	color: #000000;
+	text-decoration: none;
+}
+
+a.top:hover {
+	color: #FF0000;
+	text-decoration: none
+}
+
+a.top:active {
+	color: #000000;
+	text-decoration: none
+}
+
+p.title {
+	align: center;
+	background-color: #FFFFCC;
+	font-size: 18px;
+	line-height: 32px;
+	border: 1px solid black;
+	padding: 6px 12px 6px 12px; /* 上、右、下、左*/
+}

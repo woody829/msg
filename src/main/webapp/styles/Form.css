@@ -1,0 +1,31 @@
+input.ButtonMouseOut {
+    padding-left: 0px;
+    padding-right: 0px;
+    padding-top: 2px;
+    height: 22px;
+    background-image: url("../images/ButtonBackground.gif");
+    border: 1px solid #858585;
+    font-size: 12px;
+}
+
+input.ButtonMouseOver {
+    padding-left: 0px;
+    padding-right: 0px;
+    padding-top: 2px;
+    height: 22px;
+    background-image: url("../images/ButtonBackground2.gif");
+    border: 1px solid #858585;
+    font-size: 12px;
+}
+
+input.Text {
+    border: 1px solid #848284;
+    height: 20px;
+    text-align: left;
+}
+
+input.Number {
+    border: 1px solid #848284;
+    height: 20px;
+    text-align: right;
+}
