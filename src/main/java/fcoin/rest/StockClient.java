@@ -25,7 +25,7 @@ import java.util.concurrent.TimeUnit;
 @Service("stockClient")
 public class StockClient {
 
-    static String api_key = "***";  //OKCoin申请的apiKey
+    static String api_key = "***";  //OKCoin申请的1111apiKey111111
     static String secret_key = "***";  //OKCoin申请的secretKey
     static String url_prex = "https://api.fcoin.com/v2";
 
